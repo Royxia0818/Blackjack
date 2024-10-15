@@ -1,7 +1,7 @@
 """评估 Agent 性能
 """
 import sys
-import numpy as np
+import numpy as np # type: ignore
 import xlsxwriter
 import time
 from StudentCode.BlackJackBattleEnv import BlackJack, SimplePolicy
