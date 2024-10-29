@@ -44,14 +44,14 @@ def battle(agent1, agent1_name, agent2, agent2_name, num_round=1000, logger=sys.
     win_hc, draw_hc, win_vc, draw_vc = 0, 0, 0, 0
     half_num_round = num_round // 2
 
-    logger.write('='*80 + '\n')
-    logger.write(f'智能体 {agent1_name} vs. 智能体 {agent2_name}\n')
-    logger.write(f'智能体 {agent1_name} 坐庄\n')
+    # logger.write('='*80 + '\n')
+    # logger.write(f'智能体 {agent1_name} vs. 智能体 {agent2_name}\n')
+    # logger.write(f'智能体 {agent1_name} 坐庄\n')
 
     # 智能体 1 坐庄
-    env = BlackJack(agent1, logger=logger)
+    env = BlackJack(agent1)
     for c in range(half_num_round):  # 重复 num_round//2 轮
-        logger.write('-'*40 + f'第 {c+1:3} 轮' + '-'*40 + '\n')
+        # logger.write('-'*40 + f'第 {c+1:3} 轮' + '-'*40 + '\n')
 
         # 初始化
         obs = env.reset()
@@ -79,10 +79,10 @@ def battle(agent1, agent1_name, agent2, agent2_name, num_round=1000, logger=sys.
             draw_hc += 1
 
     # 智能体 2 坐庄
-    logger.write(f'\n智能体 {agent2_name} 坐庄\n')
+    # logger.write(f'\n智能体 {agent2_name} 坐庄\n')
     env = BlackJack(agent2, logger=logger)
     for c in range(half_num_round, num_round):  # 重复 num_round//2 轮
-        logger.write('-'*40 + f'第 {c+1:3} 轮' + '-'*40 + '\n')
+        # logger.write('-'*40 + f'第 {c+1:3} 轮' + '-'*40 + '\n')
 
         # 初始化
         obs = env.reset(seed+c)
@@ -109,10 +109,10 @@ def battle(agent1, agent1_name, agent2, agent2_name, num_round=1000, logger=sys.
         elif reward == 0:
             draw_vc += 1
 
-    logger.write('\n\n')
+    # logger.write('\n\n')
 
     # 计算总胜率
-    win_rate = (win_hc + win_vc) / num_round
+    win_rate = (win_hc + win_vc) / (num_round - draw_vc)
     return win_rate, win_hc, draw_hc, win_vc, draw_vc
 
 
@@ -136,11 +136,11 @@ if __name__ == '__main__':
     agent_num = len(agents)
     num_round = 100000
     seed = int(time.time())
-    # 对局得分表
+    # 对局胜率表
     scores = np.zeros((agent_num, agent_num))
 
     # 日志
-    logger = open('test.log', 'w')
+    # logger = open('test.log', 'w')
     score_logger = open('score.log', 'w')
 
     for i in range(agent_num):
@@ -150,13 +150,10 @@ if __name__ == '__main__':
                                                                 agents[j],
                                                                 agent_names[j],
                                                                 num_round=num_round,
-                                                                logger=logger,
                                                                 seed=seed+i*agent_num+j)
 
-            # 得分：胜负差
-            score = (2 * win_hc + draw_hc) + (2 * win_vc + draw_vc) - num_round
-            scores[i, j] = score
-            scores[j, i] = -score
+            scores[i, j] = win_rate
+            scores[j, i] = 1-win_rate
 
             print(
                 f'智能体 {agent_names[i]:20} v.s. {agent_names[j]:20} | 胜率 {win_rate:.1%}')
@@ -183,23 +180,14 @@ if __name__ == '__main__':
             score_logger.write('='*60 + '\n')
             score_logger.write('\n')
 
-    # 计算平均得分
-    mean_score = np.mean(scores, axis=1)
-
     # 记录
     ob = xlsxwriter.Workbook('得分表.xlsx')
     # 记录对局记录
-    worksheet = ob.add_worksheet('对局记录')
+    worksheet = ob.add_worksheet('对局胜率')
     worksheet.write_row(0, 1, agent_names)
     worksheet.write_column(1, 0, agent_names)
     for i, row in enumerate(scores):
-        worksheet.write_row(i+1, 1, scores[i])
-
-    # 记录平均得分
-    worksheet = ob.add_worksheet('平均得分')
-    worksheet.write_column(0, 0, ['组名'] + agent_names)
-    worksheet.write_column(0, 1, ['平均得分'] + mean_score.tolist())
+        worksheet.write_row(i+1, 1, ["{:.2f}".format(j*100) for j in scores[i]])
+    
     ob.close()
-
-    logger.close()
     score_logger.close()

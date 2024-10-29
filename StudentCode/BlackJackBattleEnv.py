@@ -113,8 +113,6 @@ class BlackJack:
         # 庄家策略
         self.dealer_policy = dealer_policy
 
-        # 日志
-        self.logger = logger or sys.stdout
 
     def reset(self, seed=None):
         """重置环境，设置随机数种子
@@ -133,7 +131,7 @@ class BlackJack:
         self.dealer_trajectory = [self._get_card(), self._get_card()]
 
         self.state = 0
-        self.logger.write(f'玩家手牌：{self.player_trajectory}，庄家手牌：{self.dealer_trajectory}\n') # 写日志用这个
+        # self.logger.write(f'玩家手牌：{self.player_trajectory}，庄家手牌：{self.dealer_trajectory}\n') # 写日志用这个
         # self.logger.write(f'玩家手牌：{self.player_trajectory}\n') # 自己玩用这个
 
         return self._get_obs()
@@ -143,11 +141,11 @@ class BlackJack:
         if action:  # 玩家抽卡
             # 抽卡
             self.player_trajectory.append(self._get_card())
-            self.logger.write(f'玩家抽牌，得到：{self.player_trajectory}\n')
+            # self.logger.write(f'玩家抽牌，得到：{self.player_trajectory}\n')
 
             # 检测是否爆牌
             if is_bust(self.player_trajectory):  # 爆牌
-                self.logger.write(f'玩家爆牌，庄家胜利\n')
+                # self.logger.write(f'玩家爆牌，庄家胜利\n')
                 return self._get_obs(), -1, True, {}
 
             return self._get_obs(), 0, False, {}
@@ -155,8 +153,8 @@ class BlackJack:
         else: # 玩家停止要牌
             # 进入庄家决策阶段
             self.state += 1
-            self.logger.write('玩家停牌，进入庄家阶段\n')
-            self.logger.write(f'庄家手牌：{self.dealer_trajectory}\n')
+            # self.logger.write('玩家停牌，进入庄家阶段\n')
+            # self.logger.write(f'庄家手牌：{self.dealer_trajectory}\n')
 
             # 获取庄家观测
             dealer_obs = self._get_obs(role='dealer')
@@ -165,31 +163,31 @@ class BlackJack:
                 # 庄家抽排
                 self.dealer_trajectory.append(self._get_card())
                 dealer_obs = self._get_obs(role='dealer')
-                self.logger.write(f'庄家抽牌，得到：{self.dealer_trajectory}\n')
+                # self.logger.write(f'庄家抽牌，得到：{self.dealer_trajectory}\n')
 
                 # 爆牌检测，如果庄家爆牌，玩家得到1的回报
                 if is_bust(self.dealer_trajectory):
-                    self.logger.write(f'庄家爆牌，玩家胜利\n')
+                    # self.logger.write(f'庄家爆牌，玩家胜利\n')
                     return self._get_obs(), 1, True, {}
                 
                 action = self.dealer_policy.act_dealer(dealer_obs)
 
             # 庄家停止要牌，开始结算
-            self.logger.write('庄家停牌，开始结算\n')
+            # self.logger.write('庄家停牌，开始结算\n')
             self.state += 1
             player_point = score(self.player_trajectory)
             dealer_point = score(self.dealer_trajectory)
-            self.logger.write(f'玩家点数: {player_point}：{self.player_trajectory}\n')
-            self.logger.write(f'庄家点数: {dealer_point}：{self.dealer_trajectory}\n')
+            # self.logger.write(f'玩家点数: {player_point}：{self.player_trajectory}\n')
+            # self.logger.write(f'庄家点数: {dealer_point}：{self.dealer_trajectory}\n')
             if player_point > dealer_point:
                 reward = 1
-                self.logger.write('玩家胜利\n')
+                # self.logger.write('玩家胜利\n')
             elif player_point == dealer_point:
                 reward = 0
-                self.logger.write('平局\n')
+                # self.logger.write('平局\n')
             else:
                 reward = -1
-                self.logger.write('庄家胜利\n')
+                # self.logger.write('庄家胜利\n')
             return self._get_obs(), reward, True, {}
 
     def _get_card(self):
